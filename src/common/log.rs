@@ -4,7 +4,6 @@ use tracing::Level;
 use tracing_appender::rolling;
 use tracing_subscriber::{self, fmt::format::Writer};
 
-#[warn(dead_code)]
 pub struct Logger;
 
 impl Logger {

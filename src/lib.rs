@@ -1,4 +1,2 @@
-pub mod log;
+pub mod common;
 
-#[cfg(test)]
-mod tests {}

@@ -4,6 +4,7 @@ use tracing::Level;
 use tracing_appender::rolling;
 use tracing_subscriber::{self, fmt::format::Writer};
 
+#[warn(dead_code)]
 pub struct Logger;
 
 impl Logger {
@@ -12,25 +13,27 @@ impl Logger {
             Some(mut f) => {
                 f.push_str(".log");
                 let log_file = rolling::daily("logs", f);
-                tracing_subscriber::fmt()
+                let subscriber = tracing_subscriber::fmt()
                     .with_writer(log_file)
                     .with_timer(CustomTimer)
                     .with_ansi(false)
                     .with_max_level(Level::TRACE)
-                    .init();
+                    .finish();
+                _ = tracing::subscriber::set_global_default(subscriber);
             }
             None => {
-                tracing_subscriber::fmt()
+                let subscriber = tracing_subscriber::fmt()
                     .with_timer(CustomTimer)
                     .with_max_level(Level::TRACE)
-                    .init();
+                    .finish();
+                _ = tracing::subscriber::set_global_default(subscriber);
             }
         }
     }
 }
 
 /// Custom time.
-pub struct CustomTimer;
+struct CustomTimer;
 
 impl tracing_subscriber::fmt::time::FormatTime for CustomTimer {
     fn format_time(&self, w: &mut Writer<'_>) -> fmt::Result {
@@ -46,10 +49,10 @@ mod test {
     use super::*;
 
     #[test]
-    fn log_init_test() {
+    fn log_test() {
         use tracing::{debug, error, info, trace, warn};
-        // Logger::init(None);
-        Logger::init(Some("app".to_string()));
+        Logger::init(None);
+        // Logger::init(Some("app".to_string()));
         error!("error log");
         warn!("warning log");
         sleep(Duration::from_millis(200));

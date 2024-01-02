@@ -1,47 +1,58 @@
+use std::fmt;
+
 use tracing::Level;
 use tracing_appender::rolling;
-use tracing_subscriber;
+use tracing_subscriber::{self, fmt::format::Writer};
 
 pub struct Logger;
 
 impl Logger {
-    pub fn init(log_to_file: bool, log_file: Option<String>) {
-        if log_to_file {
-            let log_file_name = match log_file {
-                Some(mut f) => {
-                    f.push_str(".log");
-                    f
-                }
-                None => {
-                    panic!("pls give the file name");
-                }
-            };
-            let log_file = rolling::daily("logs", log_file_name);
-            tracing_subscriber::fmt()
-                .with_writer(log_file)
-                .with_ansi(false)
-                .with_max_level(Level::TRACE)
-                .init();
-            return;
+    pub fn init(log_file: Option<String>) {
+        match log_file {
+            Some(mut f) => {
+                f.push_str(".log");
+                let log_file = rolling::daily("logs", f);
+                tracing_subscriber::fmt()
+                    .with_writer(log_file)
+                    .with_timer(CustomTimer)
+                    .with_ansi(false)
+                    .with_max_level(Level::TRACE)
+                    .init();
+            }
+            None => {
+                tracing_subscriber::fmt()
+                    .with_timer(CustomTimer)
+                    .with_max_level(Level::TRACE)
+                    .init();
+            }
         }
-        tracing_subscriber::fmt()
-            .with_max_level(Level::TRACE)
-            .init();
+    }
+}
+
+/// Custom time.
+pub struct CustomTimer;
+
+impl tracing_subscriber::fmt::time::FormatTime for CustomTimer {
+    fn format_time(&self, w: &mut Writer<'_>) -> fmt::Result {
+        let now = chrono::Local::now();
+        write!(w, "{}", now.format("%Y-%m-%d %H:%M:%S%.3f"))
     }
 }
 
 #[cfg(test)]
 mod test {
+    use std::{thread::sleep, time::Duration};
+
     use super::*;
 
     #[test]
     fn log_init_test() {
         use tracing::{debug, error, info, trace, warn};
-        let to_file = false;
-        let log_file = Some("app".to_string());
-        Logger::init(to_file, log_file);
+        // Logger::init(None);
+        Logger::init(Some("app".to_string()));
         error!("error log");
         warn!("warning log");
+        sleep(Duration::from_millis(200));
         info!("info log");
         debug!("debug log");
         trace!("trace log");

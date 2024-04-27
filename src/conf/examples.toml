@@ -1,0 +1,14 @@
+# the name of chain.
+name = "btc"
+# timeout for requesting vendor services, default is 30 second.
+request_timeout = "30s"
+# slow request time threadhold for vendor services, default 200 mills.
+slow_threshold = "200ms"
+# maximum number of threads to process historical data.
+max_threads = 4
+
+[node]
+protocol = "http"
+host = "127.0.0.1:8030"
+user = "bitcoin"
+password = "bitcoin"
